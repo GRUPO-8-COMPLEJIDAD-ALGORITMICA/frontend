@@ -12,16 +12,27 @@ Rutas{% endblock %} {% block content %}
 
 <div class="mapa-container">
   <h2 class="mapa-title">
-    Visualización de un mapa con todos los nodos de respuesta y riesgo
+    Visualización de mapas interactivos con nodos y rutas
   </h2>
 
+  <!-- Selector de mapas -->
+  <div class="mapa-selector">
+    <button class="btn-tab active" data-mapa="riesgo">🔴 Mapa de Riesgo</button>
+    <button class="btn-tab" data-mapa="respuesta">🟢 Mapa de Respuesta</button>
+    <button class="btn-tab" data-mapa="caminos">🟡 Mapa de Caminos</button>
+  </div>
+
+  <!-- Contenedor del mapa -->
   <div class="mapa-area" id="mapa-principal">
-    <div class="mapa-placeholder">
-      <p>🗺️ Área del Mapa</p>
-      <p style="font-size: 0.9rem; margin-top: 10px">
-        Los nodos aparecerán aquí después de la carga
-      </p>
-    </div>
+    <iframe
+      id="mapa-iframe"
+      src="/mapa/riesgo"
+      width="100%"
+      height="100%"
+      frameborder="0"
+      style="border-radius: 10px"
+    >
+    </iframe>
   </div>
 
   <button id="btn-calcular-rutas" class="btn btn-center">Calcular Rutas</button>
@@ -116,16 +127,30 @@ Rutas{% endblock %} {% block content %}
   document.addEventListener("DOMContentLoaded", function () {
     console.log("Mapa principal cargado");
 
+    // Configurar tabs de mapas
+    const tabButtons = document.querySelectorAll(".btn-tab");
+    const mapaIframe = document.getElementById("mapa-iframe");
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        // Remover clase active de todos los botones
+        tabButtons.forEach((btn) => btn.classList.remove("active"));
+
+        // Agregar clase active al botón clickeado
+        this.classList.add("active");
+
+        // Cambiar el src del iframe
+        const tipoMapa = this.getAttribute("data-mapa");
+        mapaIframe.src = `/mapa/${tipoMapa}`;
+
+        console.log(`Cambiando a mapa: ${tipoMapa}`);
+      });
+    });
+
     // Configuración específica para mapa principal
     const mapaArea = document.getElementById("mapa-principal");
     if (mapaArea) {
-      // Simular carga de datos
-      setTimeout(() => {
-        const placeholder = mapaArea.querySelector(".mapa-placeholder");
-        if (placeholder) {
-          placeholder.style.opacity = "0.3";
-        }
-      }, 1000);
+      console.log("Área del mapa inicializada");
     }
   });
 </script>

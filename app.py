@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
+import os
 
 # instancia de Flask
 app = Flask(__name__)
@@ -17,6 +18,31 @@ def mapa_principal():
 @app.route('/mapa-controles')
 def mapa_controles():
     return render_template('mapa_controles.html')
+
+# rutas para servir los mapas generados en el backend
+@app.route('/mapa/riesgo')
+def mapa_riesgo():
+    backend_path = os.path.join('..', 'backend', 'grafo_riesgo.html')
+    if os.path.exists(backend_path):
+        return send_file(backend_path)
+    else:
+        return "Mapa de riesgo no disponible", 404
+
+@app.route('/mapa/caminos')
+def mapa_caminos():
+    backend_path = os.path.join('..', 'backend', 'grafo_caminos.html')
+    if os.path.exists(backend_path):
+        return send_file(backend_path)
+    else:
+        return "Mapa de caminos no disponible", 404
+
+@app.route('/mapa/respuesta')
+def mapa_respuesta():
+    backend_path = os.path.join('..', 'backend', 'grafo_respuesta.html')
+    if os.path.exists(backend_path):
+        return send_file(backend_path)
+    else:
+        return "Mapa de respuesta no disponible", 404
 
 # ruta con parámetro
 @app.route('/usuario/<nombre>')
