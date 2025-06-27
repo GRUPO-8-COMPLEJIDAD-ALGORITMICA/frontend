@@ -1,0 +1,247 @@
+{% extends "base.html" %} {% block title %}Mapa con Controles - Gestión de
+Rutas{% endblock %} {% block content %}
+<div class="header">
+  <h1>⚙️ Control de Rutas</h1>
+  <p>Gestión avanzada de kilometraje y rutas</p>
+</div>
+
+<div class="nav-links">
+  <a href="/">🏠 Inicio</a>
+  <a href="/mapa">🗺️ Mapa Principal</a>
+</div>
+
+<div class="mapa-container">
+  <div class="controles-container">
+    <!-- Panel izquierdo - Información del mapa -->
+    <div>
+      <h3 style="color: #2c3e50; margin-bottom: 20px">
+        📊 Información del Mapa
+      </h3>
+      <div class="mapa-info">
+        <h3>Mapa</h3>
+        <ul id="mapa-info-list">
+          <li><strong>Grafo (limitado)</strong><br />Nodos: Cargando...</li>
+          <li><strong>Nodos de respuesta</strong><br />Total: Cargando...</li>
+          <li>
+            <strong>Nodo de riesgo seleccionado</strong><br />Activos:
+            Cargando...
+          </li>
+          <li><strong>Ruta</strong><br />Calculadas: 0</li>
+        </ul>
+      </div>
+
+      <div
+        class="mapa-area"
+        id="mapa-controles"
+        style="margin-top: 20px; height: 300px"
+      >
+        <div class="mapa-placeholder">
+          <p>🗺️ Vista del Mapa</p>
+          <p style="font-size: 0.9rem; margin-top: 10px">
+            Haz clic en los nodos para interactuar
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel derecho - Controles -->
+    <div class="controles-panel">
+      <h3 style="color: #2c3e50; margin-bottom: 20px">🎛️ Panel de Control</h3>
+
+      <div class="input-group">
+        <label for="kilometraje-input">📏 Input: Seleccionar Kilometraje</label>
+        <input
+          type="number"
+          id="kilometraje-input"
+          value="10"
+          min="1"
+          max="100"
+          step="0.1"
+          placeholder="Ingrese kilometraje"
+        />
+        <small style="color: #7f8c8d; margin-top: 5px; display: block"
+          >Rango permitido: 1 - 100 km</small
+        >
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-kilometraje" class="btn btn-secondary">
+          🔄 Cambiar Kilometraje
+        </button>
+
+        <button id="btn-limpiar" class="btn btn-danger">
+          🧹 Limpiar Ruta Seleccionada
+        </button>
+
+        <button id="btn-calcular-rutas" class="btn">Recalcular Rutas</button>
+      </div>
+
+      <!-- Panel de información del nodo seleccionado -->
+      <div
+        id="nodo-info"
+        style="
+          margin-top: 30px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border-left: 4px solid #3498db;
+        "
+      >
+        <h4 style="color: #2c3e50; margin-bottom: 10px">
+          📍 Información del Nodo
+        </h4>
+        <p style="color: #7f8c8d">
+          Selecciona un nodo en el mapa para ver su información
+        </p>
+      </div>
+
+      <!-- Estadísticas en tiempo real -->
+      <div
+        style="
+          margin-top: 20px;
+          padding: 15px;
+          background: #e8f6f3;
+          border-radius: 8px;
+        "
+      >
+        <h4 style="color: #27ae60; margin-bottom: 10px">📈 Estadísticas</h4>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+          "
+        >
+          <div>
+            <strong>Tiempo de cálculo:</strong><br />
+            <span id="tiempo-calculo">-- ms</span>
+          </div>
+          <div>
+            <strong>Rutas encontradas:</strong><br />
+            <span id="rutas-encontradas">0</span>
+          </div>
+          <div>
+            <strong>Distancia total:</strong><br />
+            <span id="distancia-total">-- km</span>
+          </div>
+          <div>
+            <strong>Nodos visitados:</strong><br />
+            <span id="nodos-visitados">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel de algoritmos -->
+<div
+  style="
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+  "
+>
+  <h3 style="color: #2c3e50; margin-bottom: 15px">🧮 Algoritmos Disponibles</h3>
+  <div
+    style="
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    "
+  >
+    <div
+      style="
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px solid #3498db;
+      "
+    >
+      <h4 style="color: #3498db; margin-bottom: 10px">🎯 Dijkstra</h4>
+      <p style="color: #2c3e50; font-size: 0.9rem">
+        Algoritmo para encontrar el camino más corto
+      </p>
+      <p style="color: #7f8c8d; font-size: 0.8rem">
+        Complejidad: O((V + E) log V)
+      </p>
+    </div>
+    <div
+      style="
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px solid #e74c3c;
+      "
+    >
+      <h4 style="color: #e74c3c; margin-bottom: 10px">⭐ A* (A-Star)</h4>
+      <p style="color: #2c3e50; font-size: 0.9rem">
+        Búsqueda heurística para rutas óptimas
+      </p>
+      <p style="color: #7f8c8d; font-size: 0.8rem">Complejidad: O(b^d)</p>
+    </div>
+    <div
+      style="
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px solid #27ae60;
+      "
+    >
+      <h4 style="color: #27ae60; margin-bottom: 10px">🌊 Floyd-Warshall</h4>
+      <p style="color: #2c3e50; font-size: 0.9rem">
+        Todos los pares de caminos más cortos
+      </p>
+      <p style="color: #7f8c8d; font-size: 0.8rem">Complejidad: O(V³)</p>
+    </div>
+  </div>
+</div>
+
+<div
+  style="
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+  "
+>
+  <h4 style="color: #2c3e50; margin-bottom: 15px">Desarrollado por Grupo 8</h4>
+  <div style="color: #7f8c8d; line-height: 1.6">
+    <p><strong>Bonifacio Jaramillo, Samuel Jesus</strong> (Frontend)</p>
+    <p><strong>Ruiz Madrid, Billy Jake</strong></p>
+    <p><strong>David Alexander Perez Garcia</strong></p>
+  </div>
+  <p style="margin-top: 15px; font-size: 0.9rem; color: #95a5a6">
+    Tecnologías: Flask, CSS3 y JavaScript
+  </p>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("Mapa con controles cargado");
+
+    // Simular actualización de estadísticas
+    function actualizarEstadisticas() {
+      document.getElementById("tiempo-calculo").textContent =
+        Math.floor(Math.random() * 500 + 50) + " ms";
+      document.getElementById("rutas-encontradas").textContent = Math.floor(
+        Math.random() * 10 + 1
+      );
+      document.getElementById("distancia-total").textContent =
+        (Math.random() * 50 + 10).toFixed(2) + " km";
+      document.getElementById("nodos-visitados").textContent = Math.floor(
+        Math.random() * 8 + 3
+      );
+    }
+
+    // Actualizar estadísticas cada 5 segundos
+    setInterval(actualizarEstadisticas, 5000);
+
+    // Actualizar una vez al cargar
+    setTimeout(actualizarEstadisticas, 2000);
+  });
+</script>
+{% endblock %}
