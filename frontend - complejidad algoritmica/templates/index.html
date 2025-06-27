@@ -1,0 +1,69 @@
+{% extends "base.html" %} {% block title %}Inicio - Aplicación de Rutas y
+Mapas{% endblock %} {% block content %}
+<div class="header">
+  <h1>Aplicación de Rutas y Mapas</h1>
+  <p>
+    Sistema de visualización y cálculo de rutas con algoritmos de complejidad
+  </p>
+</div>
+
+<div class="nav-links">
+  <a href="/mapa">Ver Mapa Principal</a>
+  <a href="/mapa-controles">Mapa con Controles</a>
+</div>
+
+<div class="mapa-container">
+  <h2 class="mapa-title">¡Bienvenido al Sistema de Rutas!</h2>
+  <div style="text-align: center; padding: 40px">
+    <p style="font-size: 1.2rem; color: #7f8c8d; margin-bottom: 30px">
+      Selecciona una opción del menú superior para comenzar a usar la
+      aplicación.
+    </p>
+    <div
+      style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+      "
+    >
+      <div style="background: #ecf0f1; padding: 20px; border-radius: 10px">
+        <h3 style="color: #2c3e50; margin-bottom: 15px">🗺️ Mapa Principal</h3>
+        <p style="color: #7f8c8d; margin-bottom: 15px">
+          Visualiza el mapa completo con todos los nodos de respuesta y riesgo.
+        </p>
+        <a href="/mapa" class="btn">Ver Mapa</a>
+      </div>
+      <div style="background: #ecf0f1; padding: 20px; border-radius: 10px">
+        <h3 style="color: #2c3e50; margin-bottom: 15px">
+          ⚙️ Controles Avanzados
+        </h3>
+        <p style="color: #7f8c8d; margin-bottom: 15px">
+          Accede a controles para cambiar kilometraje y gestionar rutas.
+        </p>
+        <a href="/mapa-controles" class="btn">Ver Controles</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  style="
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+  "
+>
+  <h4 style="color: #2c3e50; margin-bottom: 15px">Desarrollado por Grupo 8</h4>
+  <div style="color: #7f8c8d; line-height: 1.6">
+    <p><strong>Bonifacio Jaramillo, Samuel Jesus</strong> (Frontend)</p>
+    <p><strong>Ruiz Madrid, Billy Jake</strong></p>
+    <p><strong>David Alexander Perez Garcia</strong></p>
+  </div>
+  <p style="margin-top: 15px; font-size: 0.9rem; color: #95a5a6">
+    Tecnologías: Flask, CSS3 y JavaScript
+  </p>
+</div>
+{% endblock %}
