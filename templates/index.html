@@ -10,6 +10,7 @@ Mapas{% endblock %} {% block content %}
 <div class="nav-links">
   <a href="/mapa">Ver Mapa Principal</a>
   <a href="/mapa-controles">Mapa con Controles</a>
+  <a href="/busqueda-riesgo">Búsqueda de Riesgo</a>
 </div>
 
 <div class="mapa-container">
@@ -22,26 +23,40 @@ Mapas{% endblock %} {% block content %}
     <div
       style="
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
         margin-top: 30px;
       "
     >
       <div style="background: #ecf0f1; padding: 20px; border-radius: 10px">
-        <h3 style="color: #2c3e50; margin-bottom: 15px">🗺️ Mapa Principal</h3>
+        <h3 style="color: #2c3e50; margin-bottom: 15px">Mapa Principal</h3>
         <p style="color: #7f8c8d; margin-bottom: 15px">
           Visualiza el mapa completo con todos los nodos de respuesta y riesgo.
         </p>
         <a href="/mapa" class="btn">Ver Mapa</a>
       </div>
       <div style="background: #ecf0f1; padding: 20px; border-radius: 10px">
-        <h3 style="color: #2c3e50; margin-bottom: 15px">
-          ⚙️ Controles Avanzados
-        </h3>
+        <h3 style="color: #2c3e50; margin-bottom: 15px">Controles Avanzados</h3>
         <p style="color: #7f8c8d; margin-bottom: 15px">
           Accede a controles para cambiar kilometraje y gestionar rutas.
         </p>
         <a href="/mapa-controles" class="btn">Ver Controles</a>
+      </div>
+      <div
+        style="
+          background: #fff3cd;
+          padding: 20px;
+          border-radius: 10px;
+          border: 2px solid #ffeaa7;
+        "
+      >
+        <h3 style="color: #e17055; margin-bottom: 15px">Búsqueda de Riesgo</h3>
+        <p style="color: #7f8c8d; margin-bottom: 15px">
+          Busca nodos de riesgo en un área específica del mapa interactivo.
+        </p>
+        <a href="/busqueda-riesgo" class="btn" style="background: #e17055"
+          >Buscar Nodos</a
+        >
       </div>
     </div>
   </div>

@@ -1,22 +1,21 @@
 {% extends "base.html" %} {% block title %}Mapa con Controles - Gestión de
 Rutas{% endblock %} {% block content %}
 <div class="header">
-  <h1>⚙️ Control de Rutas</h1>
+  <h1>Control de Rutas</h1>
   <p>Gestión avanzada de kilometraje y rutas</p>
 </div>
 
 <div class="nav-links">
-  <a href="/">🏠 Inicio</a>
-  <a href="/mapa">🗺️ Mapa Principal</a>
+  <a href="/">Inicio</a>
+  <a href="/mapa">Mapa Principal</a>
+  <a href="/busqueda-riesgo">Búsqueda de Riesgo</a>
 </div>
 
 <div class="mapa-container">
   <div class="controles-container">
     <!-- Panel izquierdo - Información del mapa -->
     <div>
-      <h3 style="color: #2c3e50; margin-bottom: 20px">
-        📊 Información del Mapa
-      </h3>
+      <h3 style="color: #2c3e50; margin-bottom: 20px">Información del Mapa</h3>
       <div class="mapa-info">
         <h3>Mapa</h3>
         <ul id="mapa-info-list">
@@ -39,7 +38,7 @@ Rutas{% endblock %} {% block content %}
             font-weight: 500;
             color: #2c3e50;
           "
-          >🗺️ Seleccionar Mapa:</label
+          >Seleccionar Mapa:</label
         >
         <select
           id="mapa-select"
@@ -51,9 +50,9 @@ Rutas{% endblock %} {% block content %}
             border: 1px solid #bdc3c7;
           "
         >
-          <option value="riesgo">🔴 Mapa de Riesgo</option>
-          <option value="respuesta">🟢 Mapa de Respuesta</option>
-          <option value="caminos">🟡 Mapa de Caminos</option>
+          <option value="riesgo">Mapa de Riesgo</option>
+          <option value="respuesta">Mapa de Respuesta</option>
+          <option value="caminos">Mapa de Caminos</option>
         </select>
       </div>
 
@@ -76,10 +75,10 @@ Rutas{% endblock %} {% block content %}
 
     <!-- Panel derecho - Controles -->
     <div class="controles-panel">
-      <h3 style="color: #2c3e50; margin-bottom: 20px">🎛️ Panel de Control</h3>
+      <h3 style="color: #2c3e50; margin-bottom: 20px">Panel de Control</h3>
 
       <div class="input-group">
-        <label for="kilometraje-input">📏 Input: Seleccionar Kilometraje</label>
+        <label for="kilometraje-input">Input: Seleccionar Kilometraje</label>
         <input
           type="number"
           id="kilometraje-input"
@@ -96,11 +95,11 @@ Rutas{% endblock %} {% block content %}
 
       <div class="btn-group">
         <button id="btn-kilometraje" class="btn btn-secondary">
-          🔄 Cambiar Kilometraje
+          Cambiar Kilometraje
         </button>
 
         <button id="btn-limpiar" class="btn btn-danger">
-          🧹 Limpiar Ruta Seleccionada
+          Limpiar Ruta Seleccionada
         </button>
 
         <button id="btn-calcular-rutas" class="btn">Recalcular Rutas</button>
@@ -118,7 +117,7 @@ Rutas{% endblock %} {% block content %}
         "
       >
         <h4 style="color: #2c3e50; margin-bottom: 10px">
-          📍 Información del Nodo
+          Información del Nodo
         </h4>
         <p style="color: #7f8c8d">
           Selecciona un nodo en el mapa para ver su información
@@ -134,7 +133,7 @@ Rutas{% endblock %} {% block content %}
           border-radius: 8px;
         "
       >
-        <h4 style="color: #27ae60; margin-bottom: 10px">📈 Estadísticas</h4>
+        <h4 style="color: #27ae60; margin-bottom: 10px">Estadísticas</h4>
         <div
           style="
             display: grid;
@@ -174,7 +173,7 @@ Rutas{% endblock %} {% block content %}
     margin-top: 20px;
   "
 >
-  <h3 style="color: #2c3e50; margin-bottom: 15px">🧮 Algoritmos Disponibles</h3>
+  <h3 style="color: #2c3e50; margin-bottom: 15px">Algoritmos Disponibles</h3>
   <div
     style="
       display: grid;
@@ -190,7 +189,7 @@ Rutas{% endblock %} {% block content %}
         border: 2px solid #3498db;
       "
     >
-      <h4 style="color: #3498db; margin-bottom: 10px">🎯 Dijkstra</h4>
+      <h4 style="color: #3498db; margin-bottom: 10px">Dijkstra</h4>
       <p style="color: #2c3e50; font-size: 0.9rem">
         Algoritmo para encontrar el camino más corto
       </p>
@@ -206,7 +205,7 @@ Rutas{% endblock %} {% block content %}
         border: 2px solid #e74c3c;
       "
     >
-      <h4 style="color: #e74c3c; margin-bottom: 10px">⭐ A* (A-Star)</h4>
+      <h4 style="color: #e74c3c; margin-bottom: 10px">A* (A-Star)</h4>
       <p style="color: #2c3e50; font-size: 0.9rem">
         Búsqueda heurística para rutas óptimas
       </p>
@@ -220,7 +219,7 @@ Rutas{% endblock %} {% block content %}
         border: 2px solid #27ae60;
       "
     >
-      <h4 style="color: #27ae60; margin-bottom: 10px">🌊 Floyd-Warshall</h4>
+      <h4 style="color: #27ae60; margin-bottom: 10px">Floyd-Warshall</h4>
       <p style="color: #2c3e50; font-size: 0.9rem">
         Todos los pares de caminos más cortos
       </p>

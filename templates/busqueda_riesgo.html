@@ -1,0 +1,1224 @@
+{% extends "base.html" %} {% block title %}Búsqueda de Nodos de Riesgo{%
+endblock %} {% block content %}
+<div class="header">
+  <h1>🔍 Búsqueda de Nodos de Riesgo</h1>
+  <p>
+    Visualización de un mapa y selección de punto de búsqueda para buscar nodos
+    de riesgo
+  </p>
+</div>
+
+<div class="nav-links">
+  <a href="/">Inicio</a>
+  <a href="/mapa">Mapa Principal</a>
+  <a href="/mapa-controles">Controles</a>
+</div>
+
+<div class="busqueda-container">
+  <!-- Instrucciones dinámicas -->
+  <div class="instrucciones" id="instrucciones">
+    <h2 id="texto-instrucciones">
+      SELECCIONE UN LUGAR EN EL MAPA PARA BUSCAR NODOS DE RIESGO
+    </h2>
+  </div>
+
+  <!-- Layout principal con mapa y panel lateral -->
+  <div class="layout-principal">
+    <!-- Contenedor del mapa -->
+    <div class="mapa-busqueda" id="mapa-busqueda">
+      <div id="leaflet-map" style="height: 100%; width: 100%"></div>
+    </div>
+
+    <!-- Panel lateral -->
+    <div class="panel-lateral" id="panel-lateral" style="display: none">
+      <div class="panel-header">
+        <h3>Mapa</h3>
+      </div>
+      <div class="panel-content">
+        <div class="grafo-info" id="grafo-riesgo-info">
+          <h4>• Grafo de nodos de riesgo</h4>
+          <div class="estadisticas-grafo">
+            <p>
+              <strong>Nodos encontrados:</strong>
+              <span id="total-nodos">0</span>
+            </p>
+            <p>
+              <strong>Conexiones:</strong> <span id="total-conexiones">0</span>
+            </p>
+            <p>
+              <strong>Área cubierta:</strong>
+              <span id="area-cubierta">0</span> km²
+            </p>
+          </div>
+        </div>
+
+        <div class="grafo-info" id="grafo-respuesta-info" style="display: none">
+          <h4>• Grafo de nodos de respuesta</h4>
+          <div class="estadisticas-grafo">
+            <p>
+              <strong>Total nodos:</strong>
+              <span id="total-nodos-respuesta">0</span>
+            </p>
+            <p>
+              <strong>Total conexiones:</strong>
+              <span id="total-conexiones-respuesta">0</span>
+            </p>
+            <p>
+              <strong>Densidad:</strong>
+              <span id="densidad-grafo">0</span>%
+            </p>
+            <p>
+              <strong>Tipo grafo:</strong>
+              <span id="tipo-grafo">-</span>
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="nodo-seleccionado"
+          id="info-nodo-seleccionado"
+          style="display: none"
+        >
+          <h4>Nodo Seleccionado</h4>
+          <div id="detalles-nodo"></div>
+        </div>
+
+        <div
+          class="ruta-calculada"
+          id="info-ruta-calculada"
+          style="display: none"
+        >
+          <h4>Ruta Óptima</h4>
+          <div id="detalles-ruta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles de búsqueda -->
+  <div class="controles-busqueda" id="controles-iniciales">
+    <div class="input-busqueda">
+      <label for="radio-busqueda">Ingrese radio de búsqueda</label>
+      <div class="radio-container">
+        <input
+          type="number"
+          id="radio-busqueda"
+          value="5"
+          min="1"
+          max="50"
+          step="1"
+        />
+        <span class="radio-unit">km</span>
+      </div>
+    </div>
+
+    <button id="btn-buscar-nodos" class="btn-buscar" disabled>
+      Buscar nodos de riesgo
+    </button>
+  </div>
+
+  <!-- Controles para cálculo de ruta -->
+  <div class="controles-ruta" id="controles-ruta" style="display: none">
+    <button id="btn-calcular-ruta" class="btn-calcular-ruta" disabled>
+      Calcular ruta óptima de respuesta al nodo de riesgo seleccionado
+    </button>
+
+    <button
+      id="btn-visualizar-grafo-directo"
+      class="btn-visualizar-grafo-directo"
+      style="display: none"
+    >
+      Visualizar grafo de nodos de respuesta
+    </button>
+
+    <button id="btn-nueva-busqueda" class="btn-secundario">
+      Nueva búsqueda
+    </button>
+  </div>
+
+  <!-- Controles para ruta calculada -->
+  <div
+    class="controles-ruta-calculada"
+    id="controles-ruta-calculada"
+    style="display: none"
+  >
+    <button id="btn-visualizar-grafo" class="btn-visualizar-grafo">
+      Visualizar grafo de nodos de respuesta
+    </button>
+
+    <button id="btn-limpiar-ruta" class="btn-limpiar-ruta">
+      Limpiar Ruta Seleccionada
+    </button>
+  </div>
+
+  <!-- Controles para grafo de respuesta -->
+  <div
+    class="controles-grafo-respuesta"
+    id="controles-grafo-respuesta"
+    style="display: none"
+  >
+    <button id="btn-regresar-atras" class="btn-regresar">Regresar atrás</button>
+  </div>
+
+  <!-- Resultados de búsqueda -->
+  <div id="resultados-busqueda" class="resultados-oculto">
+    <h3>Nodos de Riesgo Encontrados</h3>
+    <p class="instruccion-seleccion">
+      Haga clic en un nodo del mapa para seleccionarlo
+    </p>
+    <div id="lista-nodos" class="lista-nodos">
+      <!-- Los resultados se llenarán dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Resultados de ruta -->
+  <div id="resultados-ruta" class="resultados-oculto">
+    <h3>Ruta Óptima Calculada</h3>
+    <div id="info-ruta-detallada" class="info-ruta">
+      <!-- Los detalles de la ruta se llenarán dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<!-- Panel de información -->
+<div class="info-panel">
+  <h3 style="color: #2c3e50; margin-bottom: 15px">Información del Sistema</h3>
+  <div class="info-grid">
+    <div class="info-item info-riesgo">
+      <strong>Punto Seleccionado</strong>
+      <p id="punto-info">Haga clic en el mapa para seleccionar</p>
+    </div>
+    <div class="info-item info-radio">
+      <strong>Radio de Búsqueda</strong>
+      <p id="radio-info">5 km</p>
+    </div>
+    <div class="info-item info-resultados">
+      <strong>Nodos Encontrados</strong>
+      <p id="nodos-info">0 nodos</p>
+    </div>
+    <div class="info-item info-algoritmo">
+      <strong>Algoritmo</strong>
+      <p id="algoritmo-info">Búsqueda por proximidad geográfica</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer-info">
+  <h4 style="color: #2c3e50; margin-bottom: 15px">Desarrollado por Grupo 8</h4>
+  <div style="color: #7f8c8d; line-height: 1.6">
+    <p><strong>Bonifacio Jaramillo, Samuel Jesus</strong> (Frontend)</p>
+    <p><strong>Ruiz Madrid, Billy Jake</strong></p>
+    <p><strong>David Alexander Perez Garcia</strong></p>
+  </div>
+  <p style="margin-top: 15px; font-size: 0.9rem; color: #95a5a6">
+    Tecnologías: Flask, Leaflet, CSS3 y JavaScript
+  </p>
+</div>
+{% endblock %} {% block scripts %}
+<!-- Leaflet CSS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("Inicializando búsqueda de nodos de riesgo");
+
+    // Variables globales
+    let mapa = null;
+    let puntoSeleccionado = null;
+    let marcadorSeleccionado = null;
+    let circuloBusqueda = null;
+    let marcadoresRiesgo = [];
+    let marcadoresRespuesta = [];
+    let nodosRiesgoEncontrados = [];
+    let nodoRiesgoSeleccionado = null;
+    let rutaCalculada = null;
+    let lineasConexion = [];
+    let lineaRuta = null;
+
+    // Estados de la aplicación
+    const ESTADOS = {
+      INICIAL: "inicial",
+      NODOS_ENCONTRADOS: "nodos_encontrados",
+      NODO_SELECCIONADO: "nodo_seleccionado",
+      RUTA_CALCULADA: "ruta_calculada",
+      RUTA_MOSTRADA: "ruta_mostrada",
+      GRAFO_RESPUESTA: "grafo_respuesta",
+    };
+    let estadoActual = ESTADOS.INICIAL;
+
+    // Inicializar mapa
+    function inicializarMapa() {
+      // Coordenadas de Lima, Perú
+      const limaCoords = [-12.0464, -77.0428];
+
+      // Crear mapa
+      mapa = L.map("leaflet-map").setView(limaCoords, 13);
+
+      // Agregar capa de OpenStreetMap
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(mapa);
+
+      // Event listener para clics en el mapa
+      mapa.on("click", function (e) {
+        if (estadoActual === ESTADOS.INICIAL) {
+          seleccionarPunto(e.latlng);
+        }
+      });
+
+      console.log("Mapa inicializado");
+    }
+
+    // Cambiar estado de la interfaz
+    function cambiarEstado(nuevoEstado) {
+      estadoActual = nuevoEstado;
+
+      // Ocultar todos los controles primero
+      document.getElementById("controles-iniciales").style.display = "none";
+      document.getElementById("controles-ruta").style.display = "none";
+      document.getElementById("controles-ruta-calculada").style.display =
+        "none";
+      document.getElementById("controles-grafo-respuesta").style.display =
+        "none";
+      document.getElementById("btn-visualizar-grafo-directo").style.display =
+        "none";
+
+      switch (nuevoEstado) {
+        case ESTADOS.INICIAL:
+          document.getElementById("texto-instrucciones").textContent =
+            "SELECCIONE UN LUGAR EN EL MAPA PARA BUSCAR NODOS DE RIESGO";
+          document.getElementById("controles-iniciales").style.display = "flex";
+          document.getElementById("panel-lateral").style.display = "none";
+          document
+            .getElementById("resultados-busqueda")
+            .classList.add("resultados-oculto");
+          document
+            .getElementById("resultados-ruta")
+            .classList.add("resultados-oculto");
+          break;
+
+        case ESTADOS.NODOS_ENCONTRADOS:
+          document.getElementById("texto-instrucciones").textContent =
+            "SELECCIONE UN NODO DE RIESGO EN EL MAPA PARA CALCULAR LA RUTA ÓPTIMA A UN NODO DE RESPUESTA CERCANO";
+          document.getElementById("controles-ruta").style.display = "flex";
+          document.getElementById("panel-lateral").style.display = "block";
+          document.getElementById("grafo-riesgo-info").style.display = "block";
+          document.getElementById("grafo-respuesta-info").style.display =
+            "none";
+          document
+            .getElementById("resultados-busqueda")
+            .classList.remove("resultados-oculto");
+          document
+            .getElementById("resultados-ruta")
+            .classList.add("resultados-oculto");
+          break;
+
+        case ESTADOS.NODO_SELECCIONADO:
+          // Mantener los mismos controles que NODOS_ENCONTRADOS pero habilitar el botón
+          document.getElementById("texto-instrucciones").textContent =
+            "SELECCIONE UN NODO DE RIESGO EN EL MAPA PARA CALCULAR LA RUTA ÓPTIMA A UN NODO DE RESPUESTA CERCANO";
+          document.getElementById("controles-ruta").style.display = "flex";
+          document.getElementById("panel-lateral").style.display = "block";
+          document.getElementById("grafo-riesgo-info").style.display = "block";
+          document.getElementById("grafo-respuesta-info").style.display =
+            "none";
+          document
+            .getElementById("resultados-busqueda")
+            .classList.remove("resultados-oculto");
+          document
+            .getElementById("resultados-ruta")
+            .classList.add("resultados-oculto");
+          document.getElementById("btn-calcular-ruta").disabled = false;
+          document.getElementById(
+            "btn-visualizar-grafo-directo"
+          ).style.display = "inline-block";
+          break;
+
+        case ESTADOS.RUTA_CALCULADA:
+          document
+            .getElementById("resultados-ruta")
+            .classList.remove("resultados-oculto");
+          break;
+
+        case ESTADOS.RUTA_MOSTRADA:
+          document.getElementById("texto-instrucciones").textContent =
+            "VISUALIZACIÓN DE UN MAPA CON TODOS LOS NODOS DE RESPUESTA Y LA RUTA ÓPTIMA AL NODO DE RIESGO";
+          document.getElementById("controles-ruta-calculada").style.display =
+            "flex";
+          document.getElementById("panel-lateral").style.display = "block";
+          document.getElementById("grafo-riesgo-info").style.display = "block";
+          document.getElementById("grafo-respuesta-info").style.display =
+            "none";
+          document
+            .getElementById("resultados-busqueda")
+            .classList.remove("resultados-oculto");
+          document
+            .getElementById("resultados-ruta")
+            .classList.remove("resultados-oculto");
+          break;
+
+        case ESTADOS.GRAFO_RESPUESTA:
+          document.getElementById("texto-instrucciones").textContent =
+            "VISUALIZACIÓN DE UN MAPA CON TODOS LOS NODOS DE RIESGO EN ESE PUNTO DE BÚSQUEDA";
+          document.getElementById("controles-grafo-respuesta").style.display =
+            "flex";
+          document.getElementById("panel-lateral").style.display = "block";
+          document.getElementById("grafo-riesgo-info").style.display = "none";
+          document.getElementById("grafo-respuesta-info").style.display =
+            "block";
+          document
+            .getElementById("resultados-busqueda")
+            .classList.add("resultados-oculto");
+          document
+            .getElementById("resultados-ruta")
+            .classList.add("resultados-oculto");
+          break;
+      }
+    }
+
+    // Seleccionar punto en el mapa
+    function seleccionarPunto(latlng) {
+      puntoSeleccionado = latlng;
+
+      // Remover marcador anterior si existe
+      if (marcadorSeleccionado) {
+        mapa.removeLayer(marcadorSeleccionado);
+      }
+
+      // Remover círculo anterior si existe
+      if (circuloBusqueda) {
+        mapa.removeLayer(circuloBusqueda);
+      }
+
+      // Crear nuevo marcador
+      marcadorSeleccionado = L.marker(latlng, {
+        icon: L.icon({
+          iconUrl:
+            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+          shadowUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        }),
+      }).addTo(mapa);
+
+      marcadorSeleccionado
+        .bindPopup("Punto de búsqueda seleccionado")
+        .openPopup();
+
+      // Crear círculo de búsqueda
+      const radio =
+        parseInt(document.getElementById("radio-busqueda").value) * 1000; // Convertir a metros
+      circuloBusqueda = L.circle(latlng, {
+        color: "blue",
+        fillColor: "#3498db",
+        fillOpacity: 0.1,
+        radius: radio,
+        weight: 3,
+      }).addTo(mapa);
+
+      // Habilitar botón de búsqueda
+      document.getElementById("btn-buscar-nodos").disabled = false;
+
+      // Actualizar información
+      actualizarInfoPunto(latlng);
+
+      console.log("Punto seleccionado:", latlng);
+    }
+
+    // Actualizar información del punto
+    function actualizarInfoPunto(latlng) {
+      const coordsStr = `${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
+      document.getElementById("punto-info").textContent = coordsStr;
+    }
+
+    // Actualizar radio de búsqueda
+    function actualizarRadio() {
+      const radio = parseInt(document.getElementById("radio-busqueda").value);
+      document.getElementById("radio-info").textContent = `${radio} km`;
+
+      // Actualizar círculo si existe
+      if (circuloBusqueda && puntoSeleccionado) {
+        mapa.removeLayer(circuloBusqueda);
+        circuloBusqueda = L.circle(puntoSeleccionado, {
+          color: "blue",
+          fillColor: "#3498db",
+          fillOpacity: 0.1,
+          radius: radio * 1000,
+          weight: 3,
+        }).addTo(mapa);
+      }
+    }
+
+    // Buscar nodos de riesgo
+    async function buscarNodosRiesgo() {
+      if (!puntoSeleccionado) {
+        mostrarMensaje("Por favor seleccione un punto en el mapa", "error");
+        return;
+      }
+
+      const btn = document.getElementById("btn-buscar-nodos");
+      btn.textContent = "Buscando...";
+      btn.disabled = true;
+
+      try {
+        const radio = parseInt(document.getElementById("radio-busqueda").value);
+
+        const response = await fetch("/api/buscar-nodos-riesgo", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lat: puntoSeleccionado.lat,
+            lng: puntoSeleccionado.lng,
+            radio: radio,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          nodosRiesgoEncontrados = data.nodos;
+          mostrarNodosRiesgoEnMapa(data.nodos);
+          mostrarResultadosNodos(data.nodos);
+          actualizarPanelLateral(data.nodos);
+          cambiarEstado(ESTADOS.NODOS_ENCONTRADOS);
+          mostrarMensaje(data.message, "success");
+          document.getElementById(
+            "nodos-info"
+          ).textContent = `${data.nodos.length} nodos`;
+        } else {
+          mostrarMensaje("Error en la búsqueda", "error");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        mostrarMensaje("Error de conexión", "error");
+      } finally {
+        btn.textContent = "Buscar nodos de riesgo";
+        btn.disabled = false;
+      }
+    }
+
+    // Mostrar nodos de riesgo en el mapa
+    function mostrarNodosRiesgoEnMapa(nodos) {
+      // Limpiar marcadores anteriores
+      limpiarMarcadoresRiesgo();
+
+      // Agregar nuevos marcadores de riesgo
+      nodos.forEach((nodo, index) => {
+        const marcador = L.marker([nodo.lat, nodo.lng], {
+          icon: L.icon({
+            iconUrl:
+              "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+            shadowUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+            iconSize: [20, 32],
+            iconAnchor: [10, 32],
+            popupAnchor: [1, -34],
+            shadowSize: [32, 32],
+          }),
+        }).addTo(mapa);
+
+        marcador.bindPopup(`
+          <strong>${nodo.id}</strong><br>
+          <strong>Tipo:</strong> ${nodo.tipo}<br>
+          <strong>Nivel:</strong> ${nodo.nivel_riesgo}<br>
+          <strong>Distancia:</strong> ${nodo.distancia} km
+        `);
+
+        // Agregar evento de clic
+        marcador.on("click", function () {
+          seleccionarNodoRiesgo(nodo, marcador);
+        });
+
+        marcadoresRiesgo.push(marcador);
+      });
+
+      // Dibujar conexiones entre nodos
+      dibujarConexionesNodos(nodos);
+    }
+
+    // Dibujar conexiones entre nodos de riesgo
+    function dibujarConexionesNodos(nodos) {
+      // Limpiar líneas anteriores
+      lineasConexion.forEach((linea) => mapa.removeLayer(linea));
+      lineasConexion = [];
+
+      // Conectar nodos cercanos
+      for (let i = 0; i < nodos.length; i++) {
+        for (let j = i + 1; j < nodos.length; j++) {
+          const distancia = calcularDistancia(nodos[i], nodos[j]);
+
+          // Conectar nodos que estén a menos de 3 km
+          if (distancia < 3) {
+            const linea = L.polyline(
+              [
+                [nodos[i].lat, nodos[i].lng],
+                [nodos[j].lat, nodos[j].lng],
+              ],
+              {
+                color: "red",
+                weight: 2,
+                opacity: 0.6,
+                dashArray: "5, 5",
+              }
+            ).addTo(mapa);
+
+            lineasConexion.push(linea);
+          }
+        }
+      }
+    }
+
+    // Calcular distancia entre dos nodos
+    function calcularDistancia(nodo1, nodo2) {
+      const R = 6371; // Radio de la Tierra en km
+      const dLat = ((nodo2.lat - nodo1.lat) * Math.PI) / 180;
+      const dLng = ((nodo2.lng - nodo1.lng) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((nodo1.lat * Math.PI) / 180) *
+          Math.cos((nodo2.lat * Math.PI) / 180) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // Seleccionar nodo de riesgo
+    function seleccionarNodoRiesgo(nodo, marcador) {
+      nodoRiesgoSeleccionado = nodo;
+
+      // Destacar nodo seleccionado
+      marcadoresRiesgo.forEach((m) => {
+        if (m === marcador) {
+          m.setIcon(
+            L.icon({
+              iconUrl:
+                "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
+              shadowUrl:
+                "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41],
+            })
+          );
+        } else {
+          m.setIcon(
+            L.icon({
+              iconUrl:
+                "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+              shadowUrl:
+                "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+              iconSize: [20, 32],
+              iconAnchor: [10, 32],
+              popupAnchor: [1, -34],
+              shadowSize: [32, 32],
+            })
+          );
+        }
+      });
+
+      // Actualizar panel lateral
+      actualizarInfoNodoSeleccionado(nodo);
+      cambiarEstado(ESTADOS.NODO_SELECCIONADO);
+    }
+
+    // Calcular ruta óptima
+    async function calcularRutaOptima() {
+      if (!nodoRiesgoSeleccionado) {
+        mostrarMensaje("Por favor seleccione un nodo de riesgo", "error");
+        return;
+      }
+
+      const btn = document.getElementById("btn-calcular-ruta");
+      btn.textContent = "Calculando ruta...";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch("/api/calcular-ruta-optima", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nodo_riesgo: nodoRiesgoSeleccionado,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          rutaCalculada = data;
+          mostrarRutaEnMapa(data);
+          mostrarResultadosRuta(data);
+          actualizarInfoRutaCalculada(data);
+          cambiarEstado(ESTADOS.RUTA_MOSTRADA);
+          mostrarMensaje(data.message, "success");
+          document.getElementById("algoritmo-info").textContent =
+            data.algoritmo_usado;
+        } else {
+          mostrarMensaje("Error al calcular ruta", "error");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        mostrarMensaje("Error de conexión", "error");
+      } finally {
+        btn.textContent =
+          "Calcular ruta óptima de respuesta al nodo de riesgo seleccionado";
+        btn.disabled = false;
+      }
+    }
+
+    // Mostrar ruta en el mapa
+    function mostrarRutaEnMapa(data) {
+      // Limpiar marcadores de respuesta anteriores
+      limpiarMarcadoresRespuesta();
+
+      // Agregar marcador del nodo de respuesta óptimo
+      const nodoRespuesta = data.nodo_respuesta;
+      const marcadorRespuesta = L.marker(
+        [nodoRespuesta.lat, nodoRespuesta.lng],
+        {
+          icon: L.icon({
+            iconUrl:
+              "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+            shadowUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41],
+          }),
+        }
+      ).addTo(mapa);
+
+      marcadorRespuesta.bindPopup(`
+        <strong>${nodoRespuesta.id}</strong><br>
+        <strong>Tipo:</strong> ${nodoRespuesta.tipo}<br>
+        <strong>Nombre:</strong> ${nodoRespuesta.nombre}<br>
+        <strong>Distancia:</strong> ${nodoRespuesta.distancia} km
+      `);
+
+      marcadoresRespuesta.push(marcadorRespuesta);
+
+      // Dibujar ruta
+      const puntos = [
+        [data.nodo_riesgo.lat, data.nodo_riesgo.lng],
+        ...data.puntos_ruta.map((p) => [p.lat, p.lng]),
+        [nodoRespuesta.lat, nodoRespuesta.lng],
+      ];
+
+      if (lineaRuta) {
+        mapa.removeLayer(lineaRuta);
+      }
+
+      lineaRuta = L.polyline(puntos, {
+        color: "blue",
+        weight: 4,
+        opacity: 0.8,
+      }).addTo(mapa);
+
+      // Agregar marcadores de otros nodos de respuesta (más pequeños)
+      data.todos_nodos_respuesta.forEach((nodo) => {
+        if (nodo.id !== nodoRespuesta.id) {
+          const marcador = L.marker([nodo.lat, nodo.lng], {
+            icon: L.icon({
+              iconUrl:
+                "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+              shadowUrl:
+                "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+              iconSize: [15, 24],
+              iconAnchor: [7, 24],
+              popupAnchor: [1, -34],
+              shadowSize: [24, 24],
+            }),
+          }).addTo(mapa);
+
+          marcador.bindPopup(`
+            <strong>${nodo.tipo}</strong><br>
+            ${nodo.nombre}
+          `);
+
+          marcadoresRespuesta.push(marcador);
+        }
+      });
+    }
+
+    // Actualizar panel lateral
+    function actualizarPanelLateral(nodos) {
+      document.getElementById("total-nodos").textContent = nodos.length;
+      document.getElementById("total-conexiones").textContent =
+        lineasConexion.length;
+      const radio = parseInt(document.getElementById("radio-busqueda").value);
+      const area = Math.PI * radio * radio;
+      document.getElementById("area-cubierta").textContent = area.toFixed(1);
+    }
+
+    // Actualizar información del nodo seleccionado
+    function actualizarInfoNodoSeleccionado(nodo) {
+      const div = document.getElementById("info-nodo-seleccionado");
+      const detalles = document.getElementById("detalles-nodo");
+
+      detalles.innerHTML = `
+        <p><strong>ID:</strong> ${nodo.id}</p>
+        <p><strong>Tipo:</strong> ${nodo.tipo}</p>
+        <p><strong>Nivel:</strong> ${nodo.nivel_riesgo}</p>
+        <p><strong>Distancia:</strong> ${nodo.distancia} km</p>
+      `;
+
+      div.style.display = "block";
+    }
+
+    // Actualizar información de ruta calculada
+    function actualizarInfoRutaCalculada(data) {
+      const div = document.getElementById("info-ruta-calculada");
+      const detalles = document.getElementById("detalles-ruta");
+
+      detalles.innerHTML = `
+        <p><strong>Destino:</strong> ${data.nodo_respuesta.tipo}</p>
+        <p><strong>Distancia:</strong> ${data.distancia_total} km</p>
+        <p><strong>Tiempo:</strong> ${data.tiempo_estimado} min</p>
+        <p><strong>Algoritmo:</strong> ${data.algoritmo_usado}</p>
+      `;
+
+      div.style.display = "block";
+    }
+
+    // Mostrar resultados de nodos
+    function mostrarResultadosNodos(nodos) {
+      const listaNodos = document.getElementById("lista-nodos");
+      listaNodos.innerHTML = "";
+
+      nodos.forEach((nodo) => {
+        const nodoDiv = document.createElement("div");
+        nodoDiv.className = "nodo-resultado";
+        nodoDiv.innerHTML = `
+          <div class="nodo-header">
+            <span class="nodo-id">${nodo.id}</span>
+            <span class="nodo-distancia">${nodo.distancia} km</span>
+          </div>
+          <div class="nodo-info">
+            <strong>Tipo:</strong> ${nodo.tipo}<br>
+            <strong>Nivel:</strong> ${nodo.nivel_riesgo}<br>
+            <strong>Coordenadas:</strong> ${nodo.lat.toFixed(
+              4
+            )}, ${nodo.lng.toFixed(4)}
+          </div>
+        `;
+
+        // Agregar evento de clic
+        nodoDiv.addEventListener("click", function () {
+          const marcador = marcadoresRiesgo.find(
+            (m) =>
+              Math.abs(m.getLatLng().lat - nodo.lat) < 0.0001 &&
+              Math.abs(m.getLatLng().lng - nodo.lng) < 0.0001
+          );
+          if (marcador) {
+            seleccionarNodoRiesgo(nodo, marcador);
+          }
+        });
+
+        listaNodos.appendChild(nodoDiv);
+      });
+    }
+
+    // Mostrar resultados de ruta
+    function mostrarResultadosRuta(data) {
+      const infoRuta = document.getElementById("info-ruta-detallada");
+
+      infoRuta.innerHTML = `
+        <div class="ruta-resumen">
+          <h4>Desde: ${data.nodo_riesgo.id} (${data.nodo_riesgo.tipo})</h4>
+          <h4>Hacia: ${data.nodo_respuesta.id} (${data.nodo_respuesta.tipo})</h4>
+          
+          <div class="estadisticas-ruta">
+            <div class="stat-item">
+              <strong>Distancia Total:</strong> ${data.distancia_total} km
+            </div>
+            <div class="stat-item">
+              <strong>Tiempo Estimado:</strong> ${data.tiempo_estimado} minutos
+            </div>
+            <div class="stat-item">
+              <strong>Algoritmo:</strong> ${data.algoritmo_usado}
+            </div>
+            <div class="stat-item">
+              <strong>Tiempo de Cálculo:</strong> ${data.estadisticas.tiempo_calculo} ms
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Limpiar marcadores de riesgo
+    function limpiarMarcadoresRiesgo() {
+      marcadoresRiesgo.forEach((marcador) => mapa.removeLayer(marcador));
+      marcadoresRiesgo = [];
+    }
+
+    // Limpiar marcadores de respuesta
+    function limpiarMarcadoresRespuesta() {
+      marcadoresRespuesta.forEach((marcador) => mapa.removeLayer(marcador));
+      marcadoresRespuesta = [];
+    }
+
+    // Visualizar grafo de respuesta directamente (sin necesidad de ruta calculada)
+    async function visualizarGrafoRespuestaDirecto() {
+      if (!puntoSeleccionado) {
+        mostrarMensaje("Por favor seleccione un punto en el mapa", "error");
+        return;
+      }
+
+      const btn = document.getElementById("btn-visualizar-grafo-directo");
+      btn.textContent = "Generando grafo...";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch("/api/generar-grafo-respuesta", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            punto_central: {
+              lat: puntoSeleccionado.lat,
+              lng: puntoSeleccionado.lng,
+            },
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          // Limpiar mapa actual
+          limpiarMarcadoresRiesgo();
+          limpiarMarcadoresRespuesta();
+          lineasConexion.forEach((linea) => mapa.removeLayer(linea));
+          lineasConexion = [];
+
+          if (lineaRuta) {
+            mapa.removeLayer(lineaRuta);
+            lineaRuta = null;
+          }
+
+          // Mostrar grafo completo de respuesta
+          mostrarGrafoCompletoRespuesta(data);
+          actualizarPanelGrafoRespuesta(data.estadisticas);
+          cambiarEstado(ESTADOS.GRAFO_RESPUESTA);
+          mostrarMensaje(data.message, "success");
+        } else {
+          mostrarMensaje("Error al generar grafo", "error");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        mostrarMensaje("Error de conexión", "error");
+      } finally {
+        btn.textContent = "Visualizar grafo de nodos de respuesta";
+        btn.disabled = false;
+      }
+    }
+
+    // Visualizar grafo completo de nodos de respuesta
+    async function visualizarGrafoRespuesta() {
+      if (!puntoSeleccionado || !rutaCalculada) {
+        mostrarMensaje(
+          "No hay datos suficientes para generar el grafo",
+          "error"
+        );
+        return;
+      }
+
+      const btn = document.getElementById("btn-visualizar-grafo");
+      btn.textContent = "Generando grafo...";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch("/api/generar-grafo-respuesta", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            punto_central: {
+              lat: puntoSeleccionado.lat,
+              lng: puntoSeleccionado.lng,
+            },
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          // Limpiar mapa actual
+          limpiarMarcadoresRiesgo();
+          limpiarMarcadoresRespuesta();
+          lineasConexion.forEach((linea) => mapa.removeLayer(linea));
+          lineasConexion = [];
+
+          if (lineaRuta) {
+            mapa.removeLayer(lineaRuta);
+            lineaRuta = null;
+          }
+
+          // Mostrar grafo completo de respuesta
+          mostrarGrafoCompletoRespuesta(data);
+          actualizarPanelGrafoRespuesta(data.estadisticas);
+          cambiarEstado(ESTADOS.GRAFO_RESPUESTA);
+          mostrarMensaje(data.message, "success");
+        } else {
+          mostrarMensaje("Error al generar grafo", "error");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        mostrarMensaje("Error de conexión", "error");
+      } finally {
+        btn.textContent = "Visualizar grafo de nodos de respuesta";
+        btn.disabled = false;
+      }
+    }
+
+    // Mostrar grafo completo de nodos de respuesta
+    function mostrarGrafoCompletoRespuesta(data) {
+      const nodos = data.nodos_respuesta;
+      const conexiones = data.conexiones;
+
+      // Agregar marcadores de nodos de respuesta
+      nodos.forEach((nodo) => {
+        const marcador = L.marker([nodo.lat, nodo.lng], {
+          icon: L.icon({
+            iconUrl:
+              "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+            shadowUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+            iconSize: [15, 24],
+            iconAnchor: [7, 24],
+            popupAnchor: [1, -34],
+            shadowSize: [24, 24],
+          }),
+        }).addTo(mapa);
+
+        marcador.bindPopup(`
+          <strong>${nodo.id}</strong><br>
+          <strong>Tipo:</strong> ${nodo.tipo}<br>
+          <strong>Nombre:</strong> ${nodo.nombre}<br>
+          <strong>Capacidad:</strong> ${nodo.capacidad}<br>
+          <strong>Estado:</strong> ${nodo.estado}
+        `);
+
+        marcadoresRespuesta.push(marcador);
+      });
+
+      // Dibujar todas las conexiones
+      conexiones.forEach((conexion) => {
+        const linea = L.polyline(conexion.coordenadas, {
+          color: "#2c3e50",
+          weight: 1,
+          opacity: 0.4,
+        }).addTo(mapa);
+
+        lineasConexion.push(linea);
+      });
+
+      // Ajustar vista del mapa
+      if (nodos.length > 0) {
+        const group = new L.featureGroup(marcadoresRespuesta);
+        mapa.fitBounds(group.getBounds().pad(0.1));
+      }
+    }
+
+    // Actualizar panel lateral para grafo de respuesta
+    function actualizarPanelGrafoRespuesta(estadisticas) {
+      document.getElementById("total-nodos-respuesta").textContent =
+        estadisticas.total_nodos;
+      document.getElementById("total-conexiones-respuesta").textContent =
+        estadisticas.total_conexiones;
+      document.getElementById("densidad-grafo").textContent =
+        estadisticas.densidad_grafo;
+      document.getElementById("tipo-grafo").textContent =
+        estadisticas.tipo_grafo;
+    }
+
+    // Limpiar ruta seleccionada
+    function limpiarRutaSeleccionada() {
+      // Limpiar marcadores de respuesta y ruta
+      limpiarMarcadoresRespuesta();
+
+      if (lineaRuta) {
+        mapa.removeLayer(lineaRuta);
+        lineaRuta = null;
+      }
+
+      // Resetear nodo seleccionado
+      if (nodoRiesgoSeleccionado) {
+        // Volver a mostrar todos los nodos de riesgo sin selección
+        mostrarNodosRiesgoEnMapa(nodosRiesgoEncontrados);
+        nodoRiesgoSeleccionado = null;
+      }
+
+      // Limpiar información del panel
+      document.getElementById("info-nodo-seleccionado").style.display = "none";
+      document.getElementById("info-ruta-calculada").style.display = "none";
+
+      // Volver al estado de nodos encontrados
+      cambiarEstado(ESTADOS.NODOS_ENCONTRADOS);
+      mostrarMensaje("Ruta limpiada exitosamente", "success");
+    }
+
+    // Regresar al estado anterior
+    function regresarAtras() {
+      // Limpiar todo del grafo de respuesta
+      limpiarMarcadoresRespuesta();
+      lineasConexion.forEach((linea) => mapa.removeLayer(linea));
+      lineasConexion = [];
+
+      // Restaurar estado de ruta mostrada
+      if (rutaCalculada && nodoRiesgoSeleccionado) {
+        mostrarNodosRiesgoEnMapa(nodosRiesgoEncontrados);
+        seleccionarNodoRiesgo(
+          nodoRiesgoSeleccionado,
+          marcadoresRiesgo.find(
+            (m) =>
+              Math.abs(m.getLatLng().lat - nodoRiesgoSeleccionado.lat) <
+                0.0001 &&
+              Math.abs(m.getLatLng().lng - nodoRiesgoSeleccionado.lng) < 0.0001
+          )
+        );
+        mostrarRutaEnMapa(rutaCalculada);
+        cambiarEstado(ESTADOS.RUTA_MOSTRADA);
+      } else {
+        // Si no hay ruta calculada, volver a nodos encontrados
+        mostrarNodosRiesgoEnMapa(nodosRiesgoEncontrados);
+        cambiarEstado(ESTADOS.NODOS_ENCONTRADOS);
+      }
+
+      mostrarMensaje("Regresando al estado anterior", "success");
+    }
+
+    // Nueva búsqueda
+    function nuevaBusqueda() {
+      // Limpiar todo
+      limpiarMarcadoresRiesgo();
+      limpiarMarcadoresRespuesta();
+      lineasConexion.forEach((linea) => mapa.removeLayer(linea));
+      lineasConexion = [];
+
+      if (lineaRuta) {
+        mapa.removeLayer(lineaRuta);
+        lineaRuta = null;
+      }
+
+      if (marcadorSeleccionado) {
+        mapa.removeLayer(marcadorSeleccionado);
+        marcadorSeleccionado = null;
+      }
+
+      if (circuloBusqueda) {
+        mapa.removeLayer(circuloBusqueda);
+        circuloBusqueda = null;
+      }
+
+      // Resetear variables
+      puntoSeleccionado = null;
+      nodosRiesgoEncontrados = [];
+      nodoRiesgoSeleccionado = null;
+      rutaCalculada = null;
+
+      // Resetear información
+      document.getElementById("punto-info").textContent =
+        "Haga clic en el mapa para seleccionar";
+      document.getElementById("nodos-info").textContent = "0 nodos";
+      document.getElementById("algoritmo-info").textContent =
+        "Búsqueda por proximidad geográfica";
+
+      // Volver al estado inicial
+      cambiarEstado(ESTADOS.INICIAL);
+      document.getElementById("btn-buscar-nodos").disabled = true;
+    }
+
+    // Mostrar mensajes
+    function mostrarMensaje(mensaje, tipo) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `mensaje mensaje-${tipo}`;
+      msgDiv.textContent = mensaje;
+      msgDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        max-width: 300px;
+      `;
+
+      if (tipo === "success") {
+        msgDiv.style.background = "#27ae60";
+      } else if (tipo === "error") {
+        msgDiv.style.background = "#e74c3c";
+      }
+
+      document.body.appendChild(msgDiv);
+
+      setTimeout(() => {
+        msgDiv.style.transform = "translateX(0)";
+      }, 100);
+
+      setTimeout(() => {
+        msgDiv.style.transform = "translateX(100%)";
+        setTimeout(() => {
+          msgDiv.remove();
+        }, 300);
+      }, 3000);
+    }
+
+    // Event listeners
+    document
+      .getElementById("radio-busqueda")
+      .addEventListener("input", actualizarRadio);
+
+    document
+      .getElementById("btn-buscar-nodos")
+      .addEventListener("click", buscarNodosRiesgo);
+
+    document
+      .getElementById("btn-calcular-ruta")
+      .addEventListener("click", calcularRutaOptima);
+
+    document
+      .getElementById("btn-nueva-busqueda")
+      .addEventListener("click", nuevaBusqueda);
+
+    document
+      .getElementById("btn-visualizar-grafo")
+      .addEventListener("click", visualizarGrafoRespuesta);
+
+    document
+      .getElementById("btn-visualizar-grafo-directo")
+      .addEventListener("click", visualizarGrafoRespuestaDirecto);
+
+    document
+      .getElementById("btn-limpiar-ruta")
+      .addEventListener("click", limpiarRutaSeleccionada);
+
+    document
+      .getElementById("btn-regresar-atras")
+      .addEventListener("click", regresarAtras);
+
+    // Inicializar
+    inicializarMapa();
+    cambiarEstado(ESTADOS.INICIAL);
+  });
+</script>
+{% endblock %}
