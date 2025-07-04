@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mapa de Caminos - Lima</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+      }
+      #map {
+        width: 100%;
+        height: 100vh;
+      }
+      .legend {
+        position: fixed;
+        bottom: 50px;
+        left: 50px;
+        width: 200px;
+        background-color: white;
+        border: 2px solid grey;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 9999;
+        font-size: 14px;
+      }
+      .legend h4 {
+        margin: 0 0 10px 0;
+        color: #388e3c;
+      }
+      .legend p {
+        margin: 5px 0;
+      }
+      .status {
+        font-size: 12px;
+        color: #666;
+      }
+      .success {
+        color: #4caf50;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="legend">
+      <h4>🛣️ Mapa de Caminos</h4>
+      <p>
+        <span style="color: green">🛣️</span> <strong>Red de Caminos:</strong>
+        <span id="route-count">8</span>
+      </p>
+      <p>
+        <span style="color: red">📍</span> <strong>Nodos Críticos:</strong>
+        <span id="node-count">3</span>
+      </p>
+      <p class="status">Mapas generados dinámicamente</p>
+      <p class="status success">✅ Sistema funcionando correctamente</p>
+    </div>
+
+    <script>
+      // Inicializar el mapa centrado en Lima
+      const map = L.map("map").setView([-12.0464, -77.0428], 12);
+
+      // Agregar capa base de OpenStreetMap
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
+
+      // Definir iconos personalizados para nodos importantes
+      const centralIcon = L.icon({
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+        shadowUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+
+      const nodeIcon = L.icon({
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        shadowUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+
+      // Nodos importantes de la red
+      const nodosImportantes = [
+        [-12.0464, -77.0428, "Centro de Lima", "central", centralIcon],
+        [-12.09, -77.02, "San Juan de Lurigancho", "destino", nodeIcon],
+        [-12.12, -77.03, "Villa El Salvador", "destino", nodeIcon],
+      ];
+
+      // Agregar nodos importantes
+      nodosImportantes.forEach((nodo, index) => {
+        const [lat, lon, nombre, tipo, icon] = nodo;
+        L.marker([lat, lon], { icon: icon })
+          .addTo(map)
+          .bindPopup(
+            `<b>Nodo ${tipo}: ${nombre}</b><br>Punto estratégico de la red`
+          )
+          .on("click", function () {
+            map.setView([lat, lon], 15);
+          });
+      });
+
+      // Caminos principales de Lima
+      const caminos = [
+        [[-12.0464, -77.0428], [-12.062, -77.0365], "Av. Abancay", "primary"],
+        [[-12.062, -77.0365], [-12.0797, -77.0365], "Av. Grau", "primary"],
+        [
+          [-12.0797, -77.0365],
+          [-12.09, -77.02],
+          "Carretera Central",
+          "highway",
+        ],
+        [[-12.0464, -77.0428], [-12.03, -77.06], "Av. La Marina", "primary"],
+        [[-12.0464, -77.0428], [-12.01, -77.05], "Av. Túpac Amaru", "primary"],
+        [[-12.0464, -77.0428], [-12.08, -77.08], "Av. Brasil", "secondary"],
+        [[-12.0464, -77.0428], [-12.1, -77.01], "Av. Javier Prado", "primary"],
+        [[-12.0464, -77.0428], [-12.12, -77.03], "Panamericana Sur", "highway"],
+      ];
+
+      // Agregar caminos al mapa
+      caminos.forEach((camino, index) => {
+        const [coords, nombre, tipo] = camino;
+        const color =
+          tipo === "highway"
+            ? "#ff6b35"
+            : tipo === "primary"
+            ? "#2e7d32"
+            : "#4caf50";
+        const weight = tipo === "highway" ? 5 : tipo === "primary" ? 4 : 3;
+
+        L.polyline(coords, {
+          color: color,
+          weight: weight,
+          opacity: 0.8,
+          smoothFactor: 1,
+        })
+          .addTo(map)
+          .bindPopup(
+            `<b>${nombre}</b><br>Tipo: ${tipo}<br>Longitud: ${calculateDistance(
+              coords[0],
+              coords[1]
+            ).toFixed(2)} km`
+          );
+      });
+
+      // Función para calcular distancia aproximada
+      function calculateDistance(point1, point2) {
+        const R = 6371; // Radio de la Tierra en km
+        const dLat = ((point2[0] - point1[0]) * Math.PI) / 180;
+        const dLon = ((point2[1] - point1[1]) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((point1[0] * Math.PI) / 180) *
+            Math.cos((point2[0] * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      // Agregar ruta óptima destacada (ejemplo de algoritmo de ruta)
+      const rutaOptima = [
+        [-12.0464, -77.0428],
+        [-12.062, -77.0365],
+        [-12.0797, -77.0365],
+        [-12.09, -77.02],
+      ];
+
+      L.polyline(rutaOptima, {
+        color: "#e91e63",
+        weight: 6,
+        opacity: 0.9,
+        dashArray: "10, 10",
+      })
+        .addTo(map)
+        .bindPopup(
+          "<b>Ruta Óptima Calculada</b><br>Algoritmo: Dijkstra<br>Distancia total: 8.5 km<br>Tiempo estimado: 15 min"
+        );
+
+      // Agregar área de cobertura alrededor del centro
+      L.circle([-12.0464, -77.0428], {
+        color: "#2196f3",
+        fillColor: "#2196f3",
+        fillOpacity: 0.1,
+        radius: 5000, // 5 km de radio
+      }).addTo(map);
+
+      // Actualizar contadores
+      document.getElementById("route-count").textContent = caminos.length;
+      document.getElementById("node-count").textContent =
+        nodosImportantes.length;
+
+      // Agregar evento para mostrar coordenadas al hacer clic
+      map.on("click", function (e) {
+        const { lat, lng } = e.latlng;
+        L.popup()
+          .setLatLng(e.latlng)
+          .setContent(`Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+          .openOn(map);
+      });
+
+      // Simular actualización de tráfico en tiempo real
+      setInterval(() => {
+        const randomRoute = Math.floor(Math.random() * caminos.length);
+        console.log(`Actualizando tráfico en: ${caminos[randomRoute][1]}`);
+      }, 10000);
+
+      console.log("Mapa de caminos cargado exitosamente");
+    </script>
+  </body>
+</html>

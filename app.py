@@ -26,28 +26,31 @@ def mapa_controles():
 def busqueda_riesgo():
     return render_template('busqueda_riesgo.html')
 
-# rutas para servir los mapas generados en el backend
+# rutas para servir los mapas generados como archivos estáticos
 @app.route('/mapa/riesgo')
 def mapa_riesgo():
-    backend_path = os.path.join('..', 'backend', 'grafo_riesgo.html')
-    if os.path.exists(backend_path):
-        return send_file(backend_path)
+    # Servir archivo HTML estático del mapa de riesgo
+    static_path = os.path.join(app.static_folder, 'maps', 'mapa_riesgo.html')
+    if os.path.exists(static_path):
+        return send_file(static_path)
     else:
         return "Mapa de riesgo no disponible", 404
 
 @app.route('/mapa/caminos')
 def mapa_caminos():
-    backend_path = os.path.join('..', 'backend', 'grafo_caminos.html')
-    if os.path.exists(backend_path):
-        return send_file(backend_path)
+    # Servir archivo HTML estático del mapa de caminos
+    static_path = os.path.join(app.static_folder, 'maps', 'mapa_caminos.html')
+    if os.path.exists(static_path):
+        return send_file(static_path)
     else:
         return "Mapa de caminos no disponible", 404
 
 @app.route('/mapa/respuesta')
 def mapa_respuesta():
-    backend_path = os.path.join('..', 'backend', 'grafo_respuesta.html')
-    if os.path.exists(backend_path):
-        return send_file(backend_path)
+    # Servir archivo HTML estático del mapa de respuesta
+    static_path = os.path.join(app.static_folder, 'maps', 'mapa_respuesta.html')
+    if os.path.exists(static_path):
+        return send_file(static_path)
     else:
         return "Mapa de respuesta no disponible", 404
 
